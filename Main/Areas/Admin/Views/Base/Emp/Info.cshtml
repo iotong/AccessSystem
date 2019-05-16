@@ -1,0 +1,124 @@
+@{
+    var KeyId = Tools.HttpHelper.Request.Query["ID"].ToString();
+    KeyId = KeyId.ToGuid() == Guid.Empty ? "" : KeyId;
+    
+}
+<div id="app">
+    <div class="page-content animated fadeInDown">
+        <div class="container-fluid pb-100">
+            <div class="row" id="form">
+
+                <!--以下是例子，请根据实际情况编写表单-->
+
+                @(UI.Input<Emp>(item => item.Number, 6, null, new { @readonly = "readonly" }))
+                @(UI.Input<Emp>(item => item.Name))
+
+
+                @*@(UI.FindBack<Dep,Emp>(w => w.Name, w => w.Department, Url.Action("Index", "Dep", new { findback = "1" }), "vueApp.findBack(row,'Department')", "vueApp.findBack(null,'Department');", 6))
+                @(UI.FindB*@ack<Dep,Emp>(w => w.Name, w => w.ManagementDept, Url.Action("Index", "Dep", new { findback = "2"}), "vueApp.findBack(row,'ManagementDept')", "vueApp.findBack(null,'ManagementDept');", 6))
+
+                @(UI.Input<Emp>(item => item.Department))
+                @(UI.Input<Emp>(item => item.ManagementDept))
+                @*@(UI.FindBack<Emp,Dep>(w => w.Department, w => w.Name, Url.Action("Index", "Dep", new { findback = "1" }), "vueApp.findBack(row,'Department')", "vueApp.findBack(null,'Department');", 6))*@
+                @*@(UI.FindBack<Emp, Dep>(w => w.ManagementDept, w => w.Name, Url.Action("Index", "Dep", new { findback = "2", Readonly = false }), "vueApp.findBack(row,'ManagementDept')", "vueApp.findBack(null,'ManagementDept');", 6))*@
+
+                @*@(UI.Input<Emp>(item => item.Department))
+        @(UI.Input<Emp>(item => item.ManagementDept))*@
+                @(UI.Input<Emp>(item => item.CardNumber))
+                @(UI.Input<Emp>(item => item.CardType))
+                @(UI.Input<Emp>(item => item.CardStartTime, 6, null, new { type = "datetime" }))
+                @(UI.Input<Emp>(item => item.CardEndTime, 6, null, new { type = "datetime" }))
+
+
+            </div>
+
+        </div>
+    </div>
+    <!--按钮-->
+    <div class="my-ButtonBar text-right">
+        @*<button type="button" class="btn btn-success" v-show="form__KeyId" onclick="adminForm.resetUrl(null)">新增</button>*@
+        <button class="btn btn-primary" v-on:click="save">提交</button>
+       @* <button class="btn btn-primary" v-on:click="getinfo">获取人员信息</button>*@
+        <button class="btn btn-danger" onclick="admin.layer.close(admin.getLayerIframeIndex());">关闭</button>
+    </div>
+</div>
+@section css{
+}
+@section js{
+    <script src="~/Admin/js/admin-form.js"></script>
+
+    <!--业务代码-->
+    <script type="text/javascript">
+        var vueApp = new Vue({
+            el: "#app",
+            data: {
+                form__KeyId: '@KeyId',
+                @(UI.CreateViewModel(new Emp()))
+            },
+            //页面加载完成
+            mounted() {
+                this.load();
+            },
+            //函数集合
+            methods: {
+                load() {
+                    //获取表单数据
+                    console.log(this);
+                    adminForm.load({
+                        KeyId: this.form__KeyId,
+                        url: "@Url.Action("LoadForm")",
+                        callBack: function (r) {
+
+                        }
+                    });
+
+                },
+                //保存
+                save() {
+                   adminForm.Save({
+                        url: "@Url.Action("Save")"
+                   });
+                },
+
+                getinfo() {
+                    adminForm.getInfo({
+                        url: "@Url.Action("getInfo")"
+                   });
+                },
+
+
+                //查找带回
+                findBack(row, tag, dom) {
+
+
+                    if (row != null && row.length > 0) row = row[0];
+                    console.log("tag");                
+                    console.log(tag);
+                    if (tag == "Department") {
+                        this.Id = (row ? row._ukid : "");
+                        this.Department = (row ? row.Name : "");
+                        console.log("this.Name");
+                        console.log(this.Name);
+
+                    } else {
+
+                        this.Id = (row ? row._ukid : "");
+                        this.ManagementDept = (row ? row.Name : "");
+                        console.log("this.Name");
+                        console.log(this.Name);
+
+
+
+                    }
+                    
+                    //if (row != null && row.length > 0) row = row[0];
+                    //if (tag == "Role") {
+                    //    this.Role_ID = (row ? row._ukid : "");
+                    //    this.Role_Name = (row ? row.Role_Name : "");
+                    //}
+                }
+
+            }
+        });
+    </script>
+}

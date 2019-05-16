@@ -1,0 +1,140 @@
+﻿@{ 
+    var KeyId = Tools.HttpHelper.Request.Query["ID"].ToStr();
+    
+
+    //这里 只是  一个 示例  这里 可以从 数据库中 读取 数据 然后 加载到页面中
+
+
+    var TypeList = new List<string>();
+
+    TypeList.Add("人脸识别");
+    TypeList.Add("车牌识别");
+    TypeList.Add("采集终端");
+
+}
+
+<div id="app">
+    <div class="page-content animated fadeInDown">
+        <div class="container-fluid  pb-100">
+            <div class="row" id="form">
+                <!--检索面板-->
+                @(UI.Input<Equ>(item => item.Name))
+                @{
+                    var _Select_Equ_Type = UI.Select<Equ>(item => item.Type, () =>
+                    {
+                        var Html = "";
+
+                        foreach (var item in TypeList)
+                        {
+                            Html += "<option value=\"" + item + "\">" + item + "</option>";
+                        }
+
+                        return Html;
+                    });
+                }
+                @_Select_Equ_Type
+                @(UI.Input<Equ>(item => item.IpAddress))
+                @(UI.Input<Equ>(item => item.Port,6,null,new { type = "number" }))
+                @(UI.Input<Equ>(item => item.LoginName))
+                @(UI.Input<Equ>(item => item.LoginPassword))
+                @(UI.Input<Equ>(item => item.Postion))
+                @(UI.Input<Equ>(item => item.Manufacturers))
+                @(UI.Input<Equ>(item => item.EquModel))
+                @(UI.Input<Equ>(item => item.SerialNumber,6,null,new { @readonly = "readonly", type = "string" }))
+                @(UI.Input<Equ>(item => item.Memo,12))
+            </div>
+        </div>
+    </div>
+    <!--按钮-->
+    <div class="my-ButtonBar text-right">
+
+
+        <button type="button" class="btn btn-success" v-show="form__KeyId" onclick="adminForm.resetUrl(null)">新增</button>
+        @*<button type="button" class="btn btn-danger" v-on:click="connect()">连接测试</button>*@
+        <button type="button" class="btn btn-primary" v-on:click="save()">提交</button>
+        <button class="btn btn-danger" onclick="admin.layer.close(admin.getLayerIframeIndex());">关闭</button>
+    </div>
+</div>
+@section css{
+}
+@section js{
+    <script src="~/Admin/js/admin-form.js"></script>
+    <script src="~/Admin/js/admin-vue-component.js"></script>
+    <!-- 配置文件 -->
+    <script src="~/Admin/libs/neditor/neditor.config.js"></script>
+    <!-- 编辑器源码文件 -->
+    <script src="~/Admin/libs/neditor/neditor.all.min.js"></script>
+    <script src="~/Admin/libs/neditor/i18n/zh-cn/zh-cn.js"></script>
+    <!--业务代码-->
+    <script type="text/javascript">
+        var vueApp = new Vue({
+            el: "#app",
+            data: {
+                form__KeyId: '@KeyId',
+                @(UI.CreateViewModel(new Equ()))
+            },
+            //页面加载完成
+            mounted() {
+                this.load();
+            },
+            //函数集合
+            methods: {
+                load() {
+                  //获取表单数据
+                    adminForm.load({
+                        KeyId: this.form__KeyId,
+                        url: "@Url.Action("LoadForm")",
+                   });
+
+                },
+                //保存
+               
+                save() {
+
+                    adminForm.Save({
+                        url: "@Url.Action("Save")"
+
+                        //   success: function (r) {
+                        //       if (r.st == 1) {
+                        //           admin.alert("增加设备成功！","成功");
+                        //       }
+                        //       else {
+                        //           admin.alert("增加设备失败！","错误");
+                        //       }
+
+                        //   },
+                        //});
+                    });
+                    },
+                connect() {
+                    adminForm.Connect({
+                        url: "@Url.Action("GetLoginUserId")"
+                     
+                            
+
+
+                    });
+
+
+                },
+
+                //查找带回
+                findBack(row, tag, dom) {
+                    if (tag == "User") {
+                        var _Str_UserName = "";
+                        var _Str_UserID = "";
+                        if (row != null && row.length > 0) {
+                            for (var i = 0; i < row.length; i++) {
+                                _Str_UserName += row[i].User_Name + "/";
+                                _Str_UserID += row[i]._ukid + "/";
+                            }
+                        }
+                        this.UserIDList=_Str_UserID;
+                        this.User_Name=_Str_UserName;
+                    }
+                }
+
+            }
+        });
+    </script>
+}

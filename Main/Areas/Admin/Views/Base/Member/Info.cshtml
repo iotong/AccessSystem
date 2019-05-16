@@ -1,0 +1,148 @@
+﻿@{
+    var KeyId = Tools.HttpHelper.Request.Query["ID"].ToStr();
+    KeyId = KeyId.ToGuid() == Guid.Empty ? "" : KeyId;
+
+    //这里 只是  一个 示例  这里 可以从 数据库中 读取 数据 然后 加载到页面中
+    var sexList = new List<string>();
+
+    sexList.Add("男");
+    sexList.Add("女");
+
+
+}
+<div id="app">
+    <div class="page-content animated fadeInDown">
+        <div class="container-fluid  pb-100">
+            <div class="row" id="form">
+                <!--检索面板-->
+                @(UI.Input<Member>(item => item.Member_Num, 6, null, new { @readonly = "readonly", type = "number" }))
+
+                @(UI.Input<Member>(item => item.Member_Name))
+
+                @(UI.Input<Member>(item => item.Member_Phone, 6, null, new { type = "number" }))
+
+                @{
+                    var _Select_Member_Sex = UI.Select<Member>(item => item.Member_Sex, () =>
+                    {
+                        var Html = "";
+
+                        foreach (var item in sexList)
+                        {
+                            Html += "<option value=\"" + item + "\">" + item + "</option>";
+                        }
+
+                        return Html;
+                    });
+                }
+                @_Select_Member_Sex
+
+                @(UI.Input<Member>(item => item.Member_Birthday))
+
+                @(UI.FindBack<Sys_User, Member>(w => w.User_Name, w => w.Member_UserID, Url.Action("Index", "User", new { findback = "Multiple" }), "vueApp.findBack(row,'User')", "vueApp.findBack(null,'User');"))
+
+                @(UI.UploadImage<Member>(item => item.Member_Photo))
+
+                @(UI.UploadFile<Member>(item => item.Member_FilePath))
+
+                @(UI.UEditor<Member>(item => item.Member_Introduce, 12))
+
+            </div>
+
+        </div>
+
+    </div>
+    <!--按钮-->
+    <div class="my-ButtonBar text-right">
+        <button type="button" class="btn btn-success" v-show="form__KeyId" onclick="adminForm.resetUrl(null)">新增</button>
+        <button class="btn btn-primary" v-on:click="save">提交</button>
+        <button class="btn btn-danger" onclick="admin.layer.close(admin.getLayerIframeIndex());">关闭</button>
+    </div>
+</div>
+@section css{
+}
+@section js{
+    <script src="~/Admin/js/admin-form.js"></script>
+    <script src="~/Admin/js/admin-vue-component.js"></script>
+    <!-- 配置文件 -->
+    <script src="~/Admin/libs/neditor/neditor.config.js"></script>
+    <!-- 编辑器源码文件 -->
+    <script src="~/Admin/libs/neditor/neditor.all.min.js"></script>
+    <script src="~/Admin/libs/neditor/i18n/zh-cn/zh-cn.js"></script>
+    <!--业务代码-->
+    <script type="text/javascript">
+        var vueApp = new Vue({
+            el: "#app",
+            data: {
+                form__KeyId: '@KeyId',
+                   //@(UI.CreateViewModel(new Member(), "User_Name", "UserIDList"))
+                @(UI.CreateViewModel(new Member()))
+            },
+            //页面加载完成
+            mounted() {
+                this.load();
+            },
+            //函数集合
+            methods: {
+                load() {
+                    //时间 配置 代码
+                    admin.laydate.render({
+                        elem: document.querySelector("input[name=Member_Birthday]"),
+                        type: 'date',
+                        done: function (value, date, endDate) {
+                            vueApp.Member_Birthday = value;
+                        }
+                    });
+
+                    //编辑器 配置
+                    let editor_Member_Introduce = UE.getEditor('Member_Introduce');
+                    editor_Member_Introduce.addListener('blur', function (editor) {
+                        vueApp.Member_Introduce=editor_Member_Introduce.getContent();
+                    });
+
+                    //获取表单数据
+                    console.log(this);
+                    adminForm.load({
+                        KeyId: this.form__KeyId,
+                        url: "@Url.Action("LoadForm")",
+                        callBack: function (r) {
+                            setTimeout(function () {
+                                editor_Member_Introduce.setContent(vueApp.Member_Introduce ? vueApp.Member_Introduce.replace(/'/g, '\'') : "");
+                            }, 300);
+                        }
+                    });
+
+                },
+                //保存
+                save() {
+                    //创建 新数据
+                    console.log(this._data);
+                    var newData = adminForm.createFormData({
+                        Member_Photo_Files: document.querySelector('input[name=Member_Photo]').files[0],
+                        Member_FilePath_Fiels: document.querySelector('input[name=Member_FilePath]').files[0]
+                    });
+                    adminForm.Save({
+                        url: "@Url.Action("Save")",
+                        data: newData,
+                        isupfile: true
+                    });
+                },
+                //查找带回
+                findBack(row, tag, dom) {
+                    if (tag == "User") {
+                        var _Str_UserName = "";
+                        var _Str_UserID = "";
+                        if (row != null && row.length > 0) {
+                            for (var i = 0; i < row.length; i++) {
+                                _Str_UserName += row[i].User_Name + "/";
+                                _Str_UserID += row[i]._ukid + "/";
+                            }
+                        }
+                        this.UserIDList=_Str_UserID;
+                        this.User_Name=_Str_UserName;
+                    }
+                }
+
+            }
+        });
+    </script>
+}

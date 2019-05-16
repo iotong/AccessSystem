@@ -1,0 +1,50 @@
+body {
+    background: #f2f2f2;
+}
+
+#hzy-container {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.hzy-content {
+    width: 100%;
+    padding-top: 85px;
+    background: #343a40 !important;
+    padding-bottom: 85px;
+    border-bottom: 2px solid #007bff;
+    min-height: 20rem;
+    color: #fff;
+}
+
+.hzy-logo {
+    background: #007bff;
+    padding-left: 15px;
+    padding-right: 15px;
+    border-radius: 50%;
+}
+
+.hzy-footer {
+    background: #343a40 !important;
+    height: 200px;
+    border-top: 2px solid #007bff;
+    padding-bottom: 13rem;
+}
+
+.table tr td {
+    border: 0;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    background: #000;
+    opacity: .1;
+    width: 5%;
+}
+
+.carousel-control-next:focus,
+.carousel-control-next:hover,
+.carousel-control-prev:focus,
+.carousel-control-prev:hover {
+    opacity: .4;
+}

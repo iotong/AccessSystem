@@ -1,0 +1,97 @@
+﻿@{
+    var KeyId = Tools.HttpHelper.Request.Query["ID"].ToStr();
+    KeyId = KeyId.ToGuid() == Guid.Empty ? "" : KeyId;
+}
+<div id="app">
+    <div class="page-content animated fadeInDown">
+        <div class="container-fluid  pb-100">
+            <div class="row" id="form">
+                <!--检索面板-->
+                @*<div class="col-sm-12">
+                        <h4 class="example-title">用户名</h4>
+                        <input type="text" class="form-control" name="User_Name" v-model="User_Name" placeholder="请输入用户名" />
+                    </div>
+
+                    <div class="col-sm-12">
+                        <h4 class="example-title">登录名</h4>
+                        <input type="text" class="form-control" name="User_LoginName" v-model="User_LoginName" placeholder="请输入登录名" />
+                    </div>
+
+                    <div class="col-sm-12">
+                        <h4 class="example-title">登录密码</h4>
+                        <input type="text" class="form-control" name="User_Pwd" v-model="User_Pwd" placeholder="请输入登录密码" />
+                    </div>
+
+                    <div class="col-sm-12">
+                        <h4 class="example-title">邮箱地址</h4>
+                        <input type="text" class="form-control" name="User_Email" v-model="User_Email" placeholder="请输入邮件" />
+                    </div>*@
+
+                @(UI.Input<Sys_User>(item => item.User_Name, 12))
+                @(UI.Input<Sys_User>(item => item.User_LoginName, 12))
+                @(UI.Input<Sys_User>(item => item.User_Pwd, 12, null, new { type = "password" }))
+                @(UI.Input<Sys_User>(item => item.User_Email, 12))
+
+                @(UI.FindBack<Sys_Role, Sys_Role>(w => w.Role_Name, w => w.Role_ID, Url.Action("Index", "Role", new { findback = "1" }), "vueApp.findBack(row,'Role')", "vueApp.findBack(null,'Role');", 12))
+
+
+            </div>
+
+        </div>
+    </div>
+    <!--按钮-->
+    <div class="my-ButtonBar text-right">
+        <button type="button" class="btn btn-success" v-show="form__KeyId" onclick="adminForm.resetUrl(null)">新增</button>
+        <button class="btn btn-primary" v-on:click="save">提交</button>
+        <button class="btn btn-danger" onclick="admin.layer.close(admin.getLayerIframeIndex());">关闭</button>
+    </div>
+</div>
+@section css{
+}
+@section js{
+    <script src="~/Admin/js/admin-form.js"></script>
+    <!--业务代码-->
+    <script type="text/javascript">
+        var vueApp = new Vue({
+            el: "#app",
+            data: {
+                form__KeyId: '@KeyId',
+                @(UI.CreateViewModel(new Sys_User(), new Sys_Role()))
+            },
+            //页面加载完成
+            mounted() {
+                this.load();
+            },
+            //函数集合
+            methods: {
+                load() {
+                    //获取表单数据
+                    console.log(this);
+                    adminForm.load({
+                        KeyId: this.form__KeyId,
+                        url: "@Url.Action("LoadForm")",
+                        callBack: function (r) {
+
+                        }
+                    });
+
+                },
+                //保存
+                save() {
+                   adminForm.Save({
+                        url: "@Url.Action("Save")"
+                   });
+                },
+                //查找带回
+                findBack(row, tag, dom) {
+                    if (row != null && row.length > 0) row = row[0];
+                    if (tag == "Role") {
+                        this.Role_ID = (row ? row._ukid : "");
+                        this.Role_Name = (row ? row.Role_Name : "");
+                    }
+                }
+
+            }
+        });
+    </script>
+}

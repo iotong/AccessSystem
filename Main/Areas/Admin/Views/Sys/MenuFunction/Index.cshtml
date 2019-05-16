@@ -1,0 +1,221 @@
+﻿@{
+    ViewBag.BodyClass = "page-aside-fixed page-aside-left site-contabs-open site-menubar-unfold ";
+}
+
+<div class="page animation-fade" id="app">
+    <div class="page-aside">
+
+        <div class="page-aside-switch">
+            <i class="icon wb-chevron-left" aria-hidden="true"></i>
+            <i class="icon wb-chevron-right" aria-hidden="true"></i>
+        </div>
+
+        <div class="page-aside-inner page-aside-scroll" data-plugin="mCustomScrollbar">
+            <div data-role="container">
+                <div data-role="content">
+                    <section class="page-aside-section">
+                        <div class="list-group">
+                            <a class="list-group-item" href="javascript:;" onclick="vueApp.pId = ''; adminList.refresh({Menu_ID:null});">
+                                <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp;所有一级
+                            </a>
+                        </div>
+                    </section>
+                    <section class="page-aside-section">
+                        <!--标签树-->
+                        <ul id="tree" class="ztree"></ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-main">
+        <div class="page-content">
+
+            <!--高级检索部分-->
+            <div class="panel" id="panelSearch">
+                <div class="panel-heading">
+                    <h3 class="panel-title">高级检索</h3>
+                </div>
+                <div class="panel-body">
+                    <form action="javascript:void(0)" class="form-row">
+                        <div class="col-sm-3">
+                            <h4 class="example-title">菜单名</h4>
+                            <input type="text" class="form-control" name="Menu_Name" placeholder="请输入 菜单名">
+                        </div>
+                    </form>
+
+                </div>
+                <div class="panel-footer text-right">
+                    <button class="btn btn-primary" onclick="adminList.search()">检索</button>&nbsp;&nbsp;
+                    <button class="btn btn-success" onclick="adminList.resetSearch()">重置</button>&nbsp;&nbsp;
+                    <button class="btn btn-danger" onclick="adminList.panelSearch()">关闭</button>
+                </div>
+            </div>
+
+            <!--列表-->
+            <div class="panel">
+                <div class="panel-heading">
+                    <div class="col-sm-12 pt-3">
+                        <ul id="adminTools">
+                            <li>
+                                <a href=""><i class="fa fa-rotate-right"></i>&nbsp;刷新</a>
+                            </li>
+                            <li data-power="Search" name="search">
+                                <a href="javascript:;" onclick="adminList.panelSearch()"><i class="fa fa-search"></i>&nbsp;检索</a>
+                            </li>
+                            <li data-power="Add" name="add">
+                                <a href="javascript:;" v-on:click="form('add')"><i class="fa fa-plus"></i>&nbsp;添加</a>
+                            </li>
+                            <li data-power="Edit" name="edit" style="display:none;">
+                                <a href="javascript:;" v-on:click="form('edit')"><i class="fa fa-pencil"></i>&nbsp;修改</a>
+                            </li>
+                            <li data-power="Delete" name="delete" style="display:none;">
+                                <a href="javascript:;" v-on:click="remove()"><i class="fa fa-trash"></i>&nbsp;删除</a>
+                            </li>
+                            <li data-power="GetExcel" name="getExcel">
+                                <a href="javascript:;" target="_blank" v-on:click="exportExcel"><i class="fa fa-file-excel-o"></i>&nbsp;导出 Excel</a>
+                            </li>
+                            <li data-power="Print" name="print">
+                                <a href="javascript:;" target="_blank" v-on:click="print"><i class="fa fa-file-text"></i>&nbsp;打印</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel-body container-fluid p-10">
+
+                    <!--表格-->
+                    <table class="table table-hover" id="bootStrapTable"></table>
+
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+</div>
+
+@section css{
+    <link href="~/Admin/libs/zTree/css/metroStyle/metroStyle.css" rel="stylesheet" />
+    <style type="text/css">
+    </style>
+}
+@section js{
+    <script src="~/Admin/libs/bootstrap-table-develop/src/bootstrap-table.js"></script>
+    <script src="~/Admin/libs/bootstrap-table-develop/src/locale/bootstrap-table-zh-CN.js"></script>
+    <script src="~/Admin/js/admin-list.js"></script>
+    <!--else-->
+    <script src="~/Admin/libs/zTree/js/jquery.ztree.all.min.js"></script>
+    <script type="text/javascript">
+        var vueApp = new Vue({
+            el: "#app",
+            data: {
+                formId: '@ViewData["formWindowName"]',
+                thisWindowName: '@ViewData["thisWindowName"]',
+                power: JSON.parse('@Html.Raw(ViewData["PowerModel"])'),
+                pId: ''
+            },
+            mounted() {//页面加载完成
+                this.load();
+                console.log(this.power);
+            },
+            //函数集合
+            methods: {
+                //加载
+                load() {
+                    admin.ajax({
+                        url: "@Url.Action("GetDataSource")",
+                        data: { rows: 1 },
+                        success: function (r) {
+                            let adminBootStrapTable = adminList.bootStrapTable({
+                                url: "@Url.Action("GetDataSource")",
+                                columns: r.column,
+                                queryParams: function (p) {
+                                    p.Menu_ID = vueApp.pId;
+                                    return p;
+                                }
+                            });
+                        }
+                    });
+                    this.getMenuAndFunctionTree();
+                },
+                //打开表单
+                form(tag) {
+                    let rows = adminList.selectRows();
+                    let url = "@Url.Action("Info")";
+                    if (tag == "add") {
+                        url = url + "/?ID=&pId=" + this.pId;
+                    } else {
+                        url = url + "/?ID=" + rows[0]._ukid + "&pId" + this.pId;
+                    }
+                    adminList.form({
+                        id: vueApp.formId,
+                        parentIframeName: vueApp.thisWindowName,
+                        url: url,
+                        width: "1000px",
+                        height: "1500px",
+                        btn: false,
+                    });
+                },
+                //删除数据
+                remove() {
+                    adminList.delete('@Url.Action("Delete")', function () {
+                        vueApp.refresh();
+                        console.log("删除完成!");
+                    });
+                },
+                //刷新列表数据
+                refresh(data) {
+                    adminList.refresh(data);
+                    this.getMenuAndFunctionTree();
+                },
+                //导出excel
+                exportExcel() {
+                    adminList.exportExcel('@Url.Action("ExportExcel")');
+                },
+                //打印
+                print() {
+                    adminList.print('@Url.Action("Print")');
+                },
+                getMenuAndFunctionTree() {
+                    admin.ajax({
+                    url: "@Url.Action("GetMenuAndFunctionTree")",
+                    success: function (r) {
+                        var setting = {
+                            check: {
+                                enable: true,
+                                chkboxType: { "Y": "ps", "N": "ps" },
+                                chkDisabled: true
+                            },
+                            view: {
+                                dblClickExpand: true
+                            },
+                            data: {
+                                simpleData: {
+                                    enable: true,
+                                    idKey: "id",
+                                    pIdKey: "pId",
+                                    rootPId: 0,
+                                },
+                                key: { checked: 'checked' }
+                            },
+                            callback: {
+                                onClick: function (event, treeId, treeNode) {
+                                    adminList.refresh({
+                                        Menu_ID: treeNode.id
+                                    });
+                                    vueApp.pId = treeNode.id;
+                                },
+                            }
+                        };
+                        zTree = $.fn.zTree.init($("#tree"), setting, r.value);
+                        //zTree.expandAll(true);//展开所有
+
+                    }
+                });
+                }
+            }
+        });
+
+    </script>
+}

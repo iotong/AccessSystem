@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Entitys
+{
+   //
+    using DbFrame.Class;
+    using Entitys.Attributes;
+
+	[Table("<#TableName#>")]
+    public class <#ClassName#> : Models.Class.BaseClass
+    {
+<#Filds#>
+    }
+}

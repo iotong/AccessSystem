@@ -1,0 +1,275 @@
+<div class="page animation-fade" id="app">
+   
+    <div class="page-content">
+        <!--高级检索部分-->
+        <div class="panel" id="panelSearch">
+            <div class="panel-heading">
+                <h3 class="panel-title">查询条件</h3>
+            </div>
+            <div class="panel-body">
+                <form action="javascript:void(0)" class="form-row">
+                    @*<div class="col-sm-3">
+                            <h4 class="example-title">卡号</h4>
+                            <input type="text" class="form-control" id="CardNumber" placeholder="请输入卡号">
+                        </div>
+                        <div class="col-sm-3">
+                            <h4 class="example-title">姓名</h4>
+                            <input type="text" class="form-control" name="Name" placeholder="请输入姓名">
+                        </div>*@
+                    <div class="col-sm-3">
+                        @* <h4 class="example-title">设备号</h4>*@
+                         @(UI.FindBack<Equ, Rec>(w => w.Name, w => w.EquName, Url.Action("Index", "Equ", new { findback= "Multiple" }), "vueApp.findBack(row,'Equ')", "vueApp.findBack(null,'Equ');", 12))
+                         @* <input type="text" class="form-control" id="EquName" placeholder="请输入设备名称">*@
+                    </div>
+                    <div class="col-sm-3">
+                        <h4 class="example-title">开始时间</h4>
+                        <input type="datetime-local" class="form-control"  id="sTime" placeholder="请输入开始时间">
+                    </div>
+                    <div class="col-sm-3">
+                        <h4 class="example-title">结束时间</h4>
+                        <input type="datetime-local" class="form-control" id="eTime" placeholder="请输入结束时间">
+                    </div>
+                </form>
+
+            </div>
+            <div class="panel-footer text-right">
+                @*<button class="btn btn-primary" onclick="adminList.search()">检索</button>&nbsp;&nbsp;*@
+                <button class="btn btn-primary" onclick ="getrec()">获取记录</button>&nbsp;&nbsp;
+                <button class="btn btn-success" onclick="adminList.resetSearch()">重置</button>&nbsp;&nbsp;
+                <button class="btn btn-danger" onclick="adminList.panelSearch()">关闭</button>
+            </div>
+        </div>
+
+        <!--列表-->
+        <div class="panel">
+            <div class="panel-heading">
+                <div class="col-sm-12 pt-3">
+                    <ul id="adminTools">
+                        <li>
+                            <a href=""><i class="fa fa-rotate-right"></i>&nbsp;刷新</a>
+                        </li>
+                        <li data-power="Search" name="search">
+                            @*   <a href="javascript:;" onclick="adminList.panelSearch()"><i class="fa fa-search"></i>&nbsp;检索</a>*@
+                        </li>
+
+                        <li data-power="SelectEqu" name="selectEqu">
+                            <a href="javascript:;" v-on:click="selectequ()"><i class="fa fa-plus"></i>&nbsp;选择设备</a>
+                        </li>
+                        @*<li data-power="Add" name="add">
+                                <a href="javascript:;" v-on:click="form('add')"><i class="fa fa-plus"></i>&nbsp;获取记录</a>
+                            </li>*@
+                        <li data-power="Edit" name="edit" style="display:none;">
+                            <a href="javascript:;" v-on:click="form('edit')"><i class="fa fa-pencil"></i>&nbsp;修改</a>
+                        </li>
+                        <li data-power="Delete" name="delete" style="display:none;">
+                            <a href="javascript:;" v-on:click="remove()"><i class="fa fa-trash"></i>&nbsp;删除</a>
+                        </li>
+                        <li data-power="GetExcel" name="getExcel">
+                            <a href="javascript:;" target="_blank" v-on:click="exportExcel"><i class="fa fa-file-excel-o"></i>&nbsp;导出 Excel</a>
+                        </li>
+                        <li data-power="Print" name="print">
+                            <a href="javascript:;" target="_blank" v-on:click="print"><i class="fa fa-file-text"></i>&nbsp;打印</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="panel-body container-fluid p-10">
+
+                <!--表格-->
+                <table class="table table-hover" id="bootStrapTable"></table>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section css{
+    <style type="text/css">
+    </style>
+}
+@section js{
+    <script src="~/Admin/libs/bootstrap-table-develop/src/bootstrap-table.js"></script>
+    <script src="~/Admin/libs/bootstrap-table-develop/src/locale/bootstrap-table-zh-CN.js"></script>
+    <script src="~/Admin/js/admin-list.js"></script>
+    <script type="text/javascript">
+
+        var sn;
+        var name;
+        var ip;
+        var username;
+        var pass;
+        var port;
+        var vueApp = new Vue({
+            el: "#app",
+            data: {
+                formId: '@ViewData["formWindowName"]',
+                thisWindowName: '@ViewData["thisWindowName"]',
+                power: JSON.parse('@Html.Raw(ViewData["PowerModel"])'),
+                @(UI.CreateViewModel(new Equ()))
+            },
+            mounted() {//页面加载完成
+                this.load();
+                console.log(this.power);
+            },
+            //函数集合
+            methods: {
+                //加载
+                load() {
+                    admin.ajax({
+                        url: "@Url.Action("GetDataSource")",
+                        data: { rows: 1 },
+                        success: function (r) {
+                            let adminBootStrapTable = adminList.bootStrapTable({
+                                url: "@Url.Action("GetDataSource")",
+                                columns: r.column
+                            });
+                        }
+                    });
+                },
+
+
+                //打开表单
+                form(tag) {
+                    let rows = adminList.selectRows();
+                    let url = "@Url.Action("Info")";
+                    if (tag == "add") {
+                        url = url + "/?ID=";
+                    } else {
+                        url = url + "/?ID=" + rows[0]._ukid;
+                    }
+                    adminList.form({
+                        id: vueApp.formId,
+                        parentIframeName: vueApp.thisWindowName,
+                        url: url,
+                        width: "600px",
+                        height: "1500px",
+                        btn: false,
+                    });
+                } ,
+
+                //获取记录
+                @*getrec() {
+
+                    var equName = document.getElementById("EquName").value;
+                    console.log(equName);
+                
+                    var sTime = document.getElementById("sTime").value;
+                    console.log(sTime);
+
+                    var eTime = document.getElementById("eTime").value;;
+                    console.log(eTime);
+
+       
+                    admin.ajax({
+                        url: "@Url.Action("getRec")",
+                       // data: this._data,
+                        data:{
+                            equName: equName,
+                            sTime: sTime,
+                            eTime: eTime
+                        },
+                        success: function (r) {
+                        if (r.status == 1) {
+                                 admin.msg("获取人员进出记录成功!", "成功");
+                            } else { admin.msg(r.msg, "错误"); }
+                            vueApp.refresh();
+                        }
+                    });
+
+                },*@
+
+
+                selectequ() {
+
+                    var stemp = new Date()
+                    var y = stemp.getFullYear();
+                    var m = stemp.getMonth() + 1;
+                    var d = stemp.getDate();
+                    if ((m + '').length == 1) { m = '0' + (m + ''); }
+                    if ((d + '').length == 1) { d = '0' + (d + ''); }
+                    var stime = y + "-" + m + "-" + "01T00:00";
+                    var etime = y + "-" + m + "-" + d + "T23:59";
+                    $('#sTime').val(stime);
+                    $('#eTime').val(etime);
+                    adminList.panelSearch();
+
+                },
+
+                //删除数据
+                remove() {
+                    adminList.delete('@Url.Action("Delete")', function () {
+                        vueApp.refresh();
+                        console.log("删除完成!");
+                    });
+                },
+                //刷新列表数据
+                refresh(data) {
+                    adminList.refresh(data);
+                },
+                //导出excel
+                exportExcel() {
+                    adminList.exportExcel('@Url.Action("ExportExcel")');
+                },
+                //打印
+                print() {
+                    adminList.print('@Url.Action("Print")');
+                },
+
+                findBack(row, tag, dom) {
+                    if (row != null && row.length > 0) row = row[0];
+                    if (tag == "Equ") {
+
+                      
+                            this.SerialNumber = (row ? row.SerialNumber : "");
+                            this.Name = (row ? row.Name : "");
+                            sn = (row ? row.SerialNumber : "");
+                            name = (row ? row.Name : "");
+                            username = (row ? row.LoginName : "");
+                            pass = (row ? row.LoginPassword : "");
+                            ip = (row ? row.IpAddress : "");
+                            port = (row ? row.Port : "");
+                    
+                  }
+                },
+
+            }
+
+
+
+        });
+
+        function getrec() {
+
+                 
+                    var sTime = document.getElementById("sTime").value;
+                    console.log(sTime);
+
+                    var eTime = document.getElementById("eTime").value;;
+                    console.log(eTime);
+
+       
+                    admin.ajax({
+                        url: "@Url.Action("getRec")",
+                       // data: this._data,
+                        data: {
+                            equsn: sn,
+                            stime: sTime,
+                            etime: eTime,
+                            ip: ip,
+                            username: username,
+                            pass: pass,
+                            port: port,
+                            name: name,
+                            sn1: sn1
+                       },
+                        success: function (r) {
+                        if (r.status == 1) {
+                                 admin.msg("获取人员进出记录成功!", "成功");
+                            } else { admin.msg(r.msg, "错误"); }
+                            vueApp.refresh();
+                        }
+                    });
+        }
+
+    </script>
+}
